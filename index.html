@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>腦室鏡手術紀錄 v0.7 — DEMO</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1a3f6f;
+  --lbl-bg:#f1f5f9;--bd:#cbd5e1;--tx:#1e293b;--tx2:#64748b;
+  --green:#166534;--red:#dc2626;
+  --r:6px;--ff:'Noto Sans TC',sans-serif;--fm:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--ff);font-size:13.5px;color:var(--tx);background:#f0f4f8;min-height:100vh}
+.bar{background:var(--blue);color:#fff;padding:0 32px;height:52px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:200;box-shadow:0 2px 8px rgba(0,0,0,.3)}
+.bar-title{font-size:15px;font-weight:700;letter-spacing:.3px}
+.bar-sub{font-size:11px;opacity:.6;font-family:var(--fm)}
+.bar-ver{font-size:10px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:2px 10px;font-family:var(--fm)}
+.bar-space{flex:1}
+.bar-btn{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.25);padding:5px 12px;border-radius:var(--r);cursor:pointer;font-size:12px;font-family:var(--ff);transition:background .15s;white-space:nowrap}
+.bar-btn:hover{background:rgba(255,255,255,.22)}
+.bar-btn.accent{background:#fff;color:var(--blue);font-weight:700}
+.bar-btn.accent:hover{background:#e8f0fb}
+.autosave-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.7);font-family:var(--fm);padding:2px 8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:20px}
+.autosave-tag.saved{color:#bbf7d0}
+.autosave-tag .dot{width:6px;height:6px;border-radius:50%;background:#fbbf24}
+.autosave-tag.saved .dot{background:#22c55e}
+.folder-tag{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;color:rgba(255,255,255,.7);font-family:var(--fm);padding:2px 8px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);border-radius:20px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.folder-tag.set{color:#bfdbfe}
+.folder-tag .dot{width:6px;height:6px;border-radius:50%;background:#94a3b8}
+.folder-tag.set .dot{background:#60a5fa}
+
+.page{max-width:920px;margin:24px auto;padding:0 20px 60px}
+.prog-wrap{background:#fff;border:1px solid var(--bd);border-radius:var(--r);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:12px}
+.prog-label{font-size:11.5px;color:var(--tx2);white-space:nowrap;font-family:var(--fm)}
+.prog-bar{flex:1;height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:var(--blue);border-radius:3px;transition:width .3s}
+.prog-pct{font-size:11.5px;font-weight:700;color:var(--blue);font-family:var(--fm);min-width:32px;text-align:right}
+.prog-cases{font-size:11px;color:var(--tx2);font-family:var(--fm);padding-left:10px;border-left:1px solid var(--bd)}
+.section{margin-bottom:16px}
+.sec-head{font-size:12px;font-weight:700;color:var(--blue);padding:7px 0 5px;border-bottom:2px solid var(--blue);margin-bottom:0;font-family:var(--fm);letter-spacing:.3px}
+.ft{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--bd);border-top:none;border-radius:0 0 var(--r) var(--r);overflow:hidden}
+.ft td{border:.5px solid var(--bd);padding:6px 10px;vertical-align:middle;line-height:1.6}
+.lbl{background:var(--lbl-bg);font-size:12px;font-weight:500;color:var(--blue);white-space:nowrap;width:170px}
+label.opt{display:inline-flex;align-items:center;gap:4px;margin-right:10px;cursor:pointer;font-size:13px}
+input[type=radio]{accent-color:#dc2626;width:13px;height:13px}
+input[type=checkbox]{accent-color:var(--blue);width:13px;height:13px}
+input[type=text],input[type=time]{border:none;border-bottom:1.5px solid var(--bd);background:transparent;font-size:13px;font-family:var(--ff);color:var(--tx);padding:1px 3px;outline:none;transition:border-color .15s}
+input[type=text]:focus,input[type=time]:focus{border-bottom-color:var(--blue)}
+input.invalid{border-bottom-color:#dc2626;background:#fef2f2}
+.field-err{font-size:10.5px;color:#dc2626;display:block;margin-top:2px;font-family:var(--fm)}
+.wi{width:97%}.wm{width:150px}.ws{width:80px}.wx{width:50px}
+.sig{display:grid;grid-template-columns:2fr 1fr 1.5fr;gap:20px;margin-top:16px;padding-top:14px;border-top:1px solid var(--bd)}
+.sig-f label{font-size:11px;color:var(--tx2);display:block;margin-bottom:4px}
+.sig-f input{border-bottom:1.5px solid var(--bd);width:100%}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:24px;padding-top:16px;border-top:1px solid var(--bd);flex-wrap:wrap}
+.btn{padding:8px 18px;border-radius:var(--r);border:1px solid var(--bd);background:#fff;color:var(--tx);cursor:pointer;font-size:13px;font-family:var(--ff);transition:all .15s}
+.btn:hover{background:#f1f5f9}
+.btn-p{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn-p:hover{background:#153560}
+.btn-g{background:var(--green);color:#fff;border-color:var(--green)}
+.btn-g:hover{background:#14532d}
+.btn-w{background:#f59e0b;color:#fff;border-color:#f59e0b}
+.btn-w:hover{background:#d97706}
+.btn-r{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-r:hover{background:#b91c1c}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--blue);color:#fff;padding:10px 20px;border-radius:var(--r);font-size:13px;opacity:0;pointer-events:none;transition:opacity .3s;z-index:999;max-width:380px;line-height:1.5}
+.toast.show{opacity:1}
+.toast.err{background:var(--red)}
+.toast.ok{background:var(--green)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:500;align-items:center;justify-content:center;padding:20px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:10px;padding:28px 32px;width:620px;max-width:96vw;max-height:88vh;overflow-y:auto}
+.modal h3{font-size:15px;font-weight:700;color:var(--blue);margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.modal h3 .count{font-size:11px;background:var(--lbl-bg);color:var(--blue);padding:2px 10px;border-radius:20px;font-family:var(--fm)}
+.modal pre{font-family:var(--fm);font-size:11.5px;background:#f8fafc;border:1px solid var(--bd);border-radius:4px;padding:14px;white-space:pre-wrap;word-break:break-word;max-height:360px;overflow-y:auto;color:var(--tx)}
+.modal-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+.case-list{max-height:420px;overflow-y:auto;border:1px solid var(--bd);border-radius:var(--r)}
+.case-row{display:grid;grid-template-columns:48px 1fr 1fr 1.4fr 130px 90px;gap:8px;padding:8px 12px;border-bottom:1px solid var(--bd);font-size:12px;align-items:center}
+.case-row:last-child{border-bottom:none}
+.case-row.head{background:var(--lbl-bg);font-weight:700;color:var(--blue);font-family:var(--fm);font-size:11px}
+.case-row .num{font-family:var(--fm);color:var(--tx2)}
+.case-row .mrn{font-family:var(--fm)}
+.case-row .ts{font-family:var(--fm);color:var(--tx2);font-size:11px}
+.case-row button{padding:3px 10px;font-size:11px}
+.case-empty{padding:36px;text-align:center;color:var(--tx2);font-size:12.5px}
+.banner{background:#fef3c7;border:1px solid #f59e0b;color:#78350f;padding:10px 14px;border-radius:var(--r);margin-bottom:14px;font-size:12.5px;line-height:1.6}
+
+/* 列印視窗 (window.open) 用到的樣式由開窗時注入；本頁 @media print 保留為基本擋顯 */
+@media print{
+  .bar,.actions,.prog-wrap,.banner{display:none}
+  body{background:#fff}
+  .page{margin:0;padding:8px;max-width:100%}
+  .ft{break-inside:avoid}
+  .section{break-inside:avoid;margin-bottom:10px}
+}
+.demo-banner{background:#fef2f2;border:1.5px solid #dc2626;color:#991b1b;padding:10px 14px;border-radius:var(--r);margin-bottom:14px;font-size:12.5px;font-weight:500;line-height:1.55}
+.demo-banner b{color:#7f1d1d}
+@media print{.demo-banner{display:none}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <div class="bar-title">腦室鏡手術紀錄</div>
+  <div class="bar-sub">Neuroendoscopy Operative Report</div>
+  <div class="bar-ver">v0.7</div>
+  <div class="autosave-tag" id="autosaveTag"><span class="dot"></span><span id="autosaveText">尚未存檔</span></div>
+  <div class="folder-tag" id="folderTag" title="本地資料夾"><span class="dot"></span><span id="folderText">未選資料夾</span></div>
+  <div class="bar-space"></div>
+  <button class="bar-btn" onclick="showReport()">預覽報告</button>
+  <button class="bar-btn" onclick="showCaseList()">病例列表</button>
+  <button class="bar-btn" onclick="pickFolder()">📁 選資料夾</button>
+  <button class="bar-btn accent" onclick="printReport()">🖨️ 列印 / 存 PDF</button>
+</div>
+<div class="page">
+
+  <div class="demo-banner">
+    ⚠️ <b>DEMO 版本</b> — 此頁僅供 UI 展示,<b>請勿輸入真實病人資料</b>。This page is a UI showcase only — do <b>not</b> enter real patient data.
+  </div>
+
+  <div class="banner" id="folderBanner" style="display:none">
+    📁 <b>本地資料夾：</b><span id="folderBannerName">—</span>　|　每按「存檔此病例」會自動同步寫入該資料夾的 <code>neuroendo_cases.csv</code>。
+  </div>
+
+  <div class="prog-wrap">
+    <span class="prog-label">完成度</span>
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <span class="prog-pct" id="progPct">0%</span>
+    <span class="prog-cases" id="casesCounter">已存 0 筆病例</span>
+  </div>
+
+  <!-- ① 行政資料 -->
+  <div class="section">
+    <div class="sec-head">【行政資料 Administrative Information】</div>
+    <table class="ft">
+      <tr>
+        <td class="lbl">病歷號 MRN</td>
+        <td>
+          <input type="text" class="wm" id="mrn" placeholder="病歷號 (6–12 碼英數)" oninput="updateProgress();validateField('mrn')">
+          <span class="field-err" id="mrn-err" style="display:none">格式錯誤：6–12 碼英數字</span>
+        </td>
+        <td class="lbl">姓名 Name</td>
+        <td><input type="text" class="wm" id="name" placeholder="姓名" oninput="updateProgress()"></td>
+      </tr>
+      <tr>
+        <td class="lbl">出生日期 DOB</td>
+        <td>
+          <input type="text" class="wm" id="dob" placeholder="YYYY-MM-DD" oninput="updateProgress();validateField('dob')">
+          <span class="field-err" id="dob-err" style="display:none">格式錯誤：YYYY-MM-DD</span>
+        </td>
+        <td class="lbl">性別 Sex</td>
+        <td>
+          <label class="opt"><input type="radio" name="sex" value="M" onchange="updateProgress()"> M</label>
+          <label class="opt"><input type="radio" name="sex" value="F" onchange="updateProgress()"> F</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">手術日期 Date</td>
+        <td>
+          <input type="text" class="wm" id="opdate" placeholder="YYYY-MM-DD" oninput="updateProgress();validateField('opdate')">
+          <span class="field-err" id="opdate-err" style="display:none">格式錯誤：YYYY-MM-DD</span>
+        </td>
+        <td class="lbl">手術室 OR#</td>
+        <td><input type="text" class="wx" id="or" placeholder="OR#" oninput="updateProgress()"></td>
+      </tr>
+      <tr>
+        <td class="lbl">主刀 Surgeon</td>
+        <td><input type="text" class="wm" id="surgeon" placeholder="主刀醫師" oninput="updateProgress()"></td>
+        <td class="lbl">助手 Assistant</td>
+        <td><input type="text" class="wm" id="asst" placeholder="助手" oninput="updateProgress()"></td>
+      </tr>
+      <tr>
+        <td class="lbl">計價碼</td>
+        <td colspan="3">50004110</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ② Indications -->
+  <div class="section">
+    <div class="sec-head">【Indications 手術適應症】</div>
+    <table class="ft">
+      <tr><td>
+        <label class="opt"><input type="checkbox" name="ind" value="Obstructive hydrocephalus" onchange="updateProgress()"> Obstructive hydrocephalus</label>
+        <label class="opt"><input type="checkbox" name="ind" value="Communicating hydrocephalus" onchange="updateProgress()"> Communicating hydrocephalus</label>
+      </td></tr>
+      <tr><td>
+        <label class="opt"><input type="checkbox" name="ind" value="Tumor biopsy" onchange="updateProgress()"> Tumor biopsy</label>
+        <label class="opt"><input type="checkbox" name="ind" value="IVH evacuation" onchange="updateProgress()"> IVH evacuation</label>
+      </td></tr>
+      <tr><td>
+        <label class="opt"><input type="checkbox" name="ind" value="Arachnoid cyst fenestration" onchange="updateProgress()"> Arachnoid cyst fenestration</label>
+        <label class="opt"><input type="checkbox" name="ind" value="Colloid cyst removal" onchange="updateProgress()"> Colloid cyst removal</label>
+        <label class="opt"><input type="checkbox" name="ind" value="Septum pellucidum fenestration" onchange="updateProgress()"> Septum pellucidum fenestration</label>
+        <label class="opt"><input type="checkbox" name="ind" value="Other" onchange="updateProgress()"> Other:</label>
+        <input type="text" class="wm" id="indOther" placeholder="" oninput="updateProgress()">
+      </td></tr>
+    </table>
+  </div>
+
+  <!-- ③ Pre-op Imaging -->
+  <div class="section">
+    <div class="sec-head">【Pre-op Imaging Summary 術前影像摘要】</div>
+    <table class="ft">
+      <tr>
+        <td class="lbl">影像類型</td>
+        <td>
+          <label class="opt"><input type="radio" name="img" value="CT" onchange="updateProgress()"> CT</label>
+          <label class="opt"><input type="radio" name="img" value="MRI" onchange="updateProgress()"> MRI</label>
+          <label class="opt"><input type="radio" name="img" value="CT+MRI" onchange="updateProgress()"> CT + MRI</label>
+        </td>
+        <td class="lbl">影像日期</td>
+        <td><input type="text" class="wm" id="imgDate" placeholder="YYYY-MM-DD" oninput="updateProgress()"></td>
+      </tr>
+      <tr>
+        <td class="lbl">Key findings</td>
+        <td colspan="3"><input type="text" class="wi" id="imgFind" placeholder="影像發現摘要" oninput="updateProgress()"></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ④ Anesthesia -->
+  <div class="section">
+    <div class="sec-head">【Anesthesia 麻醉】</div>
+    <table class="ft"><tr><td>
+      <label class="opt"><input type="radio" name="anes" value="ETT general" onchange="updateProgress()"> Endotracheal general anesthesia</label>
+      <label class="opt"><input type="radio" name="anes" value="Other" onchange="updateProgress()"> Other:</label>
+      <input type="text" class="wm" id="anesOther" placeholder="" oninput="updateProgress()">
+    </td></tr></table>
+  </div>
+
+  <!-- ⑤ Intra-op Data -->
+  <div class="section">
+    <div class="sec-head">【Intra-operative Data 術中關鍵數據】</div>
+    <table class="ft">
+      <tr>
+        <td class="lbl">術中導航</td>
+        <td>
+          <label class="opt"><input type="radio" name="nav" value="Yes" onchange="updateProgress()"> Yes</label>
+          <label class="opt"><input type="radio" name="nav" value="No" onchange="updateProgress()"> No</label>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑥ Endoscopic Findings -->
+  <div class="section">
+    <div class="sec-head">【Endoscopic Findings 內視鏡所見】</div>
+    <table class="ft">
+      <tr>
+        <td class="lbl">CSF appearance</td>
+        <td>
+          <label class="opt"><input type="radio" name="csf" value="Clear" onchange="updateProgress()"> Clear</label>
+          <label class="opt"><input type="radio" name="csf" value="Pinkish" onchange="updateProgress()"> Pinkish</label>
+          <label class="opt"><input type="radio" name="csf" value="Reddish" onchange="updateProgress()"> Reddish</label>
+          <label class="opt"><input type="radio" name="csf" value="Xanthochromic" onchange="updateProgress()"> Xanthochromic</label>
+          <label class="opt"><input type="radio" name="csf" value="Other" onchange="updateProgress()"> Other:</label>
+          <input type="text" class="ws" id="csfOther" oninput="updateProgress()">
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">CSF 送檢</td>
+        <td>
+          <label class="opt"><input type="checkbox" name="csfTest" value="None" onchange="updateProgress()"> None</label>
+          <label class="opt"><input type="checkbox" name="csfTest" value="Culture" onchange="updateProgress()"> Culture</label>
+          <label class="opt"><input type="checkbox" name="csfTest" value="Cytology" onchange="updateProgress()"> Cytology</label>
+          <label class="opt"><input type="checkbox" name="csfTest" value="Biochemistry" onchange="updateProgress()"> Biochemistry</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Septum pellucidum</td>
+        <td>
+          <label class="opt"><input type="radio" name="sep" value="Intact" onchange="updateProgress()"> Intact</label>
+          <label class="opt"><input type="radio" name="sep" value="Patent" onchange="updateProgress()"> Patent</label>
+          <label class="opt"><input type="radio" name="sep" value="Not applicable" onchange="updateProgress()"> Not applicable</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Fogarty balloon</td>
+        <td>
+          <label class="opt"><input type="radio" name="fog" value="2Fr" onchange="updateProgress()"> 2 Fr</label>
+          <label class="opt"><input type="radio" name="fog" value="3Fr" onchange="updateProgress()"> 3 Fr</label>
+          <label class="opt"><input type="radio" name="fog" value="4Fr" onchange="updateProgress()"> 4 Fr</label>
+          <label class="opt"><input type="radio" name="fog" value="5Fr" onchange="updateProgress()"> 5 Fr</label>
+          <label class="opt"><input type="radio" name="fog" value="Not used" onchange="updateProgress()"> Not used</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Adhesion</td>
+        <td>
+          <label class="opt"><input type="radio" name="adh" value="No" onchange="updateProgress()"> No</label>
+          <label class="opt"><input type="radio" name="adh" value="Mild" onchange="updateProgress()"> Mild</label>
+          <label class="opt"><input type="radio" name="adh" value="Moderate" onchange="updateProgress()"> Moderate</label>
+          <label class="opt"><input type="radio" name="adh" value="Severe" onchange="updateProgress()"> Severe</label>
+          Location: <input type="text" class="wm" id="adhLoc" oninput="updateProgress()">
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Basilar artery</td>
+        <td>
+          <label class="opt"><input type="radio" name="bas" value="Visible" onchange="updateProgress()"> Visible</label>
+          <label class="opt"><input type="radio" name="bas" value="Invisible" onchange="updateProgress()"> Invisible</label>
+          <label class="opt"><input type="radio" name="bas" value="Not applicable" onchange="updateProgress()"> Not applicable</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Right PCA</td>
+        <td>
+          <label class="opt"><input type="radio" name="rpca" value="Visible" onchange="updateProgress()"> Visible</label>
+          <label class="opt"><input type="radio" name="rpca" value="Invisible" onchange="updateProgress()"> Invisible</label>
+          <label class="opt"><input type="radio" name="rpca" value="Not applicable" onchange="updateProgress()"> Not applicable</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">Left PCA</td>
+        <td>
+          <label class="opt"><input type="radio" name="lpca" value="Visible" onchange="updateProgress()"> Visible</label>
+          <label class="opt"><input type="radio" name="lpca" value="Invisible" onchange="updateProgress()"> Invisible</label>
+          <label class="opt"><input type="radio" name="lpca" value="Not applicable" onchange="updateProgress()"> Not applicable</label>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- ⑦ Diagnosis -->
+  <div class="section">
+    <div class="sec-head">【Endoscopic Diagnosis / Impression 診斷】</div>
+    <table class="ft">
+      <tr><td>
+        <label class="opt"><input type="checkbox" name="dx" value="IVH" onchange="updateProgress()"> IVH</label>
+        <label class="opt"><input type="checkbox" name="dx" value="Arachnoid cyst" onchange="updateProgress()"> Arachnoid cyst</label>
+        <label class="opt"><input type="checkbox" name="dx" value="Colloid cyst" onchange="updateProgress()"> Colloid cyst</label>
+        <label class="opt"><input type="checkbox" name="dx" value="Tectal tumor" onchange="updateProgress()"> Tectal tumor</label>
+        <label class="opt"><input type="checkbox" name="dx" value="Pineal tumor" onchange="updateProgress()"> Pineal tumor</label>
+        <label class="opt"><input type="checkbox" name="dx" value="Other" onchange="updateProgress()"> Other:</label>
+        <input type="text" class="wm" id="dxOther" oninput="updateProgress()">
+      </td></tr>
+    </table>
+  </div>
+
+  <!-- ⑧ Treatment -->
+  <div class="section">
+    <div class="sec-head">【Endoscopic Treatment / Additional Procedures 處置】</div>
+    <table class="ft">
+      <tr><td>
+        <label class="opt"><input type="checkbox" name="tx" value="Endoscopic biopsy" onchange="updateProgress()"> Endoscopic biopsy</label>
+        <label class="opt"><input type="checkbox" name="tx" value="Endoscopic third ventriculostomy" onchange="updateProgress()"> Endoscopic third ventriculostomy</label>
+        <label class="opt"><input type="checkbox" name="tx" value="Endoscopic fenestration" onchange="updateProgress()"> Endoscopic fenestration</label>
+        <label class="opt"><input type="checkbox" name="tx" value="Choroid plexus coagulation" onchange="updateProgress()"> Choroid plexus coagulation</label>
+        <label class="opt"><input type="checkbox" name="tx" value="Other" onchange="updateProgress()"> Other:</label>
+        <input type="text" class="wm" id="txOther" oninput="updateProgress()">
+      </td></tr>
+    </table>
+  </div>
+
+  <!-- ⑨ Complications -->
+  <div class="section">
+    <div class="sec-head">【Complications 術中併發症】</div>
+    <table class="ft">
+      <tr>
+        <td class="lbl">有無 Occurred</td>
+        <td>
+          <label class="opt"><input type="radio" name="comp" value="No" onchange="updateProgress()"> No</label>
+          <label class="opt"><input type="radio" name="comp" value="Yes" onchange="updateProgress()"> Yes</label>
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">類型 Type</td>
+        <td>
+          <label class="opt"><input type="checkbox" name="compType" value="Bleeding" onchange="updateProgress()"> Bleeding</label>
+          <label class="opt"><input type="checkbox" name="compType" value="Cardiac event" onchange="updateProgress()"> Cardiac event</label>
+          <label class="opt"><input type="checkbox" name="compType" value="CSF leak" onchange="updateProgress()"> CSF leak</label>
+          <label class="opt"><input type="checkbox" name="compType" value="Other" onchange="updateProgress()"> Other:</label>
+          <input type="text" class="ws" id="compOther" oninput="updateProgress()">
+        </td>
+      </tr>
+      <tr>
+        <td class="lbl">備註 Remarks</td>
+        <td><input type="text" class="wi" id="remarks" placeholder="備註" oninput="updateProgress()"></td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Signature -->
+  <div class="sig">
+    <div class="sig-f"><label>Surgeon 主刀醫師</label><input type="text" id="sigSurgeon" placeholder="簽名"></div>
+    <div class="sig-f"><label>Date 日期</label><input type="text" id="sigDate" placeholder="YYYY-MM-DD"></div>
+    <div class="sig-f"><label>Cosign / Supervisor</label><input type="text" id="sigCo" placeholder="簽名"></div>
+  </div>
+
+  <div class="actions">
+    <button class="btn" onclick="clearForm()">清除表單</button>
+    <button class="btn" onclick="showReport()">預覽報告</button>
+    <button class="btn btn-w" onclick="exportCSV()">📊 匯出全部 CSV</button>
+    <button class="btn btn-g" onclick="saveCase()">💾 存檔此病例</button>
+    <button class="btn btn-p" onclick="printReport()">🖨️ 列印 / 存 PDF</button>
+  </div>
+</div>
+
+<!-- Report Modal -->
+<div class="overlay" id="reportModal">
+  <div class="modal">
+    <h3>手術報告預覽</h3>
+    <pre id="reportText"></pre>
+    <div class="modal-actions">
+      <button class="btn" onclick="copyReport()">複製文字</button>
+      <button class="btn btn-p" onclick="closeModal('reportModal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<!-- Case List Modal -->
+<div class="overlay" id="caseListModal">
+  <div class="modal" style="width:780px">
+    <h3>已存病例列表 <span class="count" id="caseListCount">0</span></h3>
+    <div class="case-list" id="caseList"></div>
+    <div class="modal-actions">
+      <button class="btn btn-r" onclick="clearAllCases()">🗑️ 清空全部</button>
+      <button class="btn btn-w" onclick="exportCSV()">📊 匯出 CSV</button>
+      <button class="btn btn-p" onclick="closeModal('caseListModal')">關閉</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════
+// v0.6 — 列印用 window.print() (CJK 原生支援) + CSV 匯出 + File System Access API
+// ═══════════════════════════════════════════════════════════════════════════
+
+// 欄位 schema — CSV header 與 case 物件 key 對齊
+const CASE_FIELDS = [
+  { key:'mrn',       label:'MRN',         get:()=>v('mrn') },
+  { key:'name',      label:'Name',        get:()=>v('name') },
+  { key:'dob',       label:'DOB',         get:()=>v('dob') },
+  { key:'sex',       label:'Sex',         get:()=>r('sex') },
+  { key:'opdate',    label:'OpDate',      get:()=>v('opdate') },
+  { key:'or',        label:'OR',          get:()=>v('or') },
+  { key:'surgeon',   label:'Surgeon',     get:()=>v('surgeon') },
+  { key:'asst',      label:'Assistant',   get:()=>v('asst') },
+  { key:'ind',       label:'Indications', get:()=>cb('ind') + (v('indOther')!=='—'?' ['+v('indOther')+']':'') },
+  { key:'img',       label:'Imaging',     get:()=>r('img') },
+  { key:'imgDate',   label:'ImgDate',     get:()=>v('imgDate') },
+  { key:'imgFind',   label:'ImgFindings', get:()=>v('imgFind') },
+  { key:'anes',      label:'Anesthesia',  get:()=>r('anes') + (v('anesOther')!=='—'?' ['+v('anesOther')+']':'') },
+  { key:'nav',       label:'Navigation',  get:()=>r('nav') },
+  { key:'csf',       label:'CSF',         get:()=>r('csf') + (v('csfOther')!=='—'?' ['+v('csfOther')+']':'') },
+  { key:'csfTest',   label:'CSFTests',    get:()=>cb('csfTest') },
+  { key:'sep',       label:'Septum',      get:()=>r('sep') },
+  { key:'fog',       label:'Fogarty',     get:()=>r('fog') },
+  { key:'adh',       label:'Adhesion',    get:()=>r('adh') },
+  { key:'adhLoc',    label:'AdhLocation', get:()=>v('adhLoc') },
+  { key:'bas',       label:'Basilar',     get:()=>r('bas') },
+  { key:'rpca',      label:'RPCA',        get:()=>r('rpca') },
+  { key:'lpca',      label:'LPCA',        get:()=>r('lpca') },
+  { key:'dx',        label:'Diagnosis',   get:()=>cb('dx') + (v('dxOther')!=='—'?' ['+v('dxOther')+']':'') },
+  { key:'tx',        label:'Treatment',   get:()=>cb('tx') + (v('txOther')!=='—'?' ['+v('txOther')+']':'') },
+  { key:'comp',      label:'Complication',get:()=>r('comp') },
+  { key:'compType',  label:'CompType',    get:()=>cb('compType') + (v('compOther')!=='—'?' ['+v('compOther')+']':'') },
+  { key:'remarks',   label:'Remarks',     get:()=>v('remarks') },
+  { key:'sigSurgeon',label:'SigSurgeon',  get:()=>v('sigSurgeon') },
+  { key:'sigDate',   label:'SigDate',     get:()=>v('sigDate') },
+  { key:'sigCo',     label:'SigCosign',   get:()=>v('sigCo') },
+];
+
+const STORAGE_KEY = 'neuroendo_form_draft_v0.6';
+const CASES_KEY   = 'neuroendo_cases_v0.6';
+const DIR_HANDLE_KEY = 'neuroendo_dir_handle_v0.6'; // IndexedDB 用
+
+let saveTimer = null;
+let dirHandle = null;  // FileSystemDirectoryHandle，使用者授權的本地資料夾
+
+// ─── 基礎 getter ────────────────────────────────────────────────────────────
+function r(name){const e=document.querySelector(`input[name="${name}"]:checked`);return e?e.value:'—'}
+function cb(name){const all=[...document.querySelectorAll(`input[name="${name}"]:checked`)];return all.length?all.map(e=>e.value).join(', '):'—'}
+function v(id){const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():'—'}
+
+function updateProgress(){
+  const fields=[
+    v('mrn')!=='—',v('name')!=='—',v('opdate')!=='—',
+    r('sex')!=='—',r('anes')!=='—',r('nav')!=='—',
+    r('csf')!=='—',r('sep')!=='—',r('fog')!=='—',
+    r('adh')!=='—',r('bas')!=='—',r('rpca')!=='—',r('lpca')!=='—',
+    cb('dx')!=='—',cb('tx')!=='—',r('comp')!=='—',
+  ];
+  const done=fields.filter(Boolean).length;
+  const pct=Math.round(done/fields.length*100);
+  document.getElementById('progFill').style.width=pct+'%';
+  document.getElementById('progPct').textContent=pct+'%';
+}
+
+// ─── 報告文字 ───────────────────────────────────────────────────────────────
+function generateReport(){
+  const hr='─'.repeat(52);
+  const lines=[];
+  lines.push('腦室鏡手術紀錄  Neuroendoscopy Operative Report  v0.7');
+  lines.push('計價碼 50004110');
+  lines.push(hr);
+  lines.push('【行政資料】');
+  lines.push(`病歷號: ${v('mrn')}　姓名: ${v('name')}　DOB: ${v('dob')}　性別: ${r('sex')}`);
+  lines.push(`手術日期: ${v('opdate')}　OR#: ${v('or')}　主刀: ${v('surgeon')}　助手: ${v('asst')}`);
+  lines.push(hr);
+  lines.push('【Indications】');
+  lines.push(cb('ind') + (v('indOther')!=='—'?'　Other: '+v('indOther'):''));
+  lines.push(hr);
+  lines.push('【Pre-op Imaging】');
+  lines.push(`類型: ${r('img')}　日期: ${v('imgDate')}　Findings: ${v('imgFind')}`);
+  lines.push(hr);
+  lines.push('【Anesthesia】');
+  lines.push(r('anes') + (v('anesOther')!=='—'?'　Other: '+v('anesOther'):''));
+  lines.push(hr);
+  lines.push('【Intra-op Data】');
+  lines.push(`術中導航: ${r('nav')}`);
+  lines.push(hr);
+  lines.push('【Endoscopic Findings】');
+  lines.push(`CSF: ${r('csf')}${v('csfOther')!=='—'?' ('+v('csfOther')+')':''}　送檢: ${cb('csfTest')}`);
+  lines.push(`Septum pellucidum: ${r('sep')}　Fogarty: ${r('fog')}`);
+  lines.push(`Adhesion: ${r('adh')}${v('adhLoc')!=='—'?' at '+v('adhLoc'):''}`);
+  lines.push(`Basilar: ${r('bas')}　R-PCA: ${r('rpca')}　L-PCA: ${r('lpca')}`);
+  lines.push(hr);
+  lines.push('【Diagnosis】');
+  lines.push(cb('dx') + (v('dxOther')!=='—'?'　Other: '+v('dxOther'):''));
+  lines.push(hr);
+  lines.push('【Treatment】');
+  lines.push(cb('tx') + (v('txOther')!=='—'?'　Other: '+v('txOther'):''));
+  lines.push(hr);
+  lines.push('【Complications】');
+  lines.push(`發生: ${r('comp')}　Type: ${cb('compType')}${v('compOther')!=='—'?' ('+v('compOther')+')':''}`);
+  lines.push(`備註: ${v('remarks')}`);
+  lines.push(hr);
+  lines.push(`主刀: ${v('sigSurgeon')}　日期: ${v('sigDate')}　Cosign: ${v('sigCo')}`);
+  return lines.join('\n');
+}
+
+function showReport(){
+  document.getElementById('reportText').textContent=generateReport();
+  document.getElementById('reportModal').classList.add('open');
+}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
+document.getElementById('reportModal').addEventListener('click',function(e){if(e.target===this)closeModal('reportModal')});
+document.getElementById('caseListModal').addEventListener('click',function(e){if(e.target===this)closeModal('caseListModal')});
+
+function copyReport(){
+  navigator.clipboard.writeText(generateReport()).then(()=>toast('已複製到剪貼簿','ok'));
+}
+
+function toast(msg, level){
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className='toast show' + (level?' '+level:'');
+  setTimeout(()=>{t.classList.remove('show')},2800);
+}
+
+// ─── 列印 / 存 PDF — 用 window.print()（瀏覽器原生 CJK 支援）─────────────
+// 開新視窗，貼乾淨報告 HTML，呼叫 print()。使用者按「另存為 PDF」即可拿到中文 OK 的 PDF。
+function printReport(){
+  const report = generateReport();
+  const reportHtml = report
+    .split('\n')
+    .map(line => {
+      if (line.startsWith('─')) return '<hr>';
+      if (line.startsWith('【'))  return `<h3>${escapeHtml(line)}</h3>`;
+      return `<div class="rline">${escapeHtml(line)}</div>`;
+    })
+    .join('\n');
+
+  const html = `<!DOCTYPE html>
+<html lang="zh-TW"><head><meta charset="UTF-8">
+<title>腦室鏡手術紀錄 ${escapeHtml(v('name'))} ${escapeHtml(v('opdate'))}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=IBM+Plex+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 18mm 16mm 18mm 16mm; }
+* { box-sizing: border-box; }
+body { font-family: 'Noto Sans TC', 'PingFang TC', 'Heiti TC', 'Microsoft JhengHei', 'STHeiti', -apple-system, BlinkMacSystemFont, sans-serif;
+       font-size: 11pt; line-height: 1.55; color:#1e293b; margin:0; padding:0; }
+h1 { font-size: 14pt; color:#1a3f6f; margin: 0 0 4pt 0; }
+.hdr-sub { font-size: 9.5pt; color:#64748b; font-family: 'IBM Plex Mono', Menlo, Consolas, monospace; margin-bottom: 8pt; }
+h3 { font-size: 10.5pt; color:#1a3f6f; margin: 10pt 0 4pt 0; padding-bottom: 2pt;
+     border-bottom: 1.5pt solid #1a3f6f; font-family: inherit; }
+hr { border: none; border-top: 0.5pt solid #cbd5e1; margin: 4pt 0; }
+.rline { padding: 1pt 0; white-space: pre-wrap; word-break: break-word; }
+.foot { margin-top: 14pt; padding-top: 6pt; border-top: 0.5pt dashed #94a3b8;
+        font-size: 9pt; color: #64748b; font-family: 'IBM Plex Mono', Menlo, Consolas, monospace; }
+.no-print { background: #1a3f6f; color: #fff; padding: 10pt 14pt; margin: 0 0 12pt 0;
+            border-radius: 6px; display: flex; justify-content: space-between; align-items: center; }
+.no-print button { background: #fff; color: #1a3f6f; border: none; padding: 6pt 14pt;
+                   border-radius: 5px; cursor: pointer; font-weight: 700; font-size: 10pt;
+                   font-family: inherit; }
+@media print { .no-print { display: none; } }
+</style>
+</head><body>
+<div class="no-print">
+  <span>📄 預覽中 — 按「列印」後在對話框可選「另存為 PDF」（中文已正常顯示）</span>
+  <button onclick="window.print()">🖨️ 列印</button>
+</div>
+<h1>腦室鏡手術紀錄</h1>
+<div class="hdr-sub">Neuroendoscopy Operative Report　|　計價碼 50004110　|　v0.7</div>
+${reportHtml}
+<div class="foot">產生時間 ${new Date().toLocaleString('zh-TW')}</div>
+<script>
+window.addEventListener('load', async () => {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await Promise.race([
+        document.fonts.ready,
+        new Promise(r => setTimeout(r, 2500))
+      ]);
+    }
+  } catch (e) {}
+  setTimeout(() => window.print(), 150);
+});
+<\/script>
+</body></html>`;
+
+  const w = window.open('', '_blank', 'width=900,height=1000');
+  if (!w) { toast('彈出視窗被擋，請允許後重試','err'); return; }
+  w.document.open();
+  w.document.write(html);
+  w.document.close();
+}
+
+function escapeHtml(s){
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+// ─── 欄位驗證 ───────────────────────────────────────────────────────────────
+const VALIDATORS = {
+  mrn:    s => /^[A-Za-z0-9]{6,12}$/.test(s),
+  dob:    s => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(s),
+  opdate: s => /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/.test(s),
+};
+function validateField(id){
+  const el = document.getElementById(id);
+  const err = document.getElementById(id+'-err');
+  const val = el.value.trim();
+  if(val==='' || VALIDATORS[id](val)){
+    el.classList.remove('invalid');
+    if(err) err.style.display='none';
+  } else {
+    el.classList.add('invalid');
+    if(err) err.style.display='block';
+  }
+}
+
+// ─── 草稿 autosave（單筆，未送出時保留）───────────────────────────────────
+function autosave(){
+  const data = { _ts: Date.now(), text:{}, radio:{}, checkbox:{} };
+  document.querySelectorAll('input[type=text],input[type=time]').forEach(e=>{
+    if(e.id) data.text[e.id] = e.value;
+  });
+  document.querySelectorAll('input[type=radio]:checked').forEach(e=>{ data.radio[e.name] = e.value; });
+  const cbMap = {};
+  document.querySelectorAll('input[type=checkbox]:checked').forEach(e=>{
+    if(!cbMap[e.name]) cbMap[e.name] = [];
+    cbMap[e.name].push(e.value);
+  });
+  data.checkbox = cbMap;
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    const tag = document.getElementById('autosaveTag');
+    const txt = document.getElementById('autosaveText');
+    if(tag && txt){
+      tag.classList.add('saved');
+      const d = new Date(data._ts);
+      txt.textContent = `已存草稿 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+    }
+  }catch(e){console.warn('autosave failed', e)}
+}
+function loadDraft(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const data = JSON.parse(raw);
+    Object.entries(data.text||{}).forEach(([id,val])=>{
+      const el = document.getElementById(id);
+      if(el) el.value = val;
+    });
+    Object.entries(data.radio||{}).forEach(([name,val])=>{
+      const el = document.querySelector(`input[type=radio][name="${name}"][value="${val}"]`);
+      if(el) el.checked = true;
+    });
+    Object.entries(data.checkbox||{}).forEach(([name,vals])=>{
+      vals.forEach(vv=>{
+        const el = document.querySelector(`input[type=checkbox][name="${name}"][value="${vv}"]`);
+        if(el) el.checked = true;
+      });
+    });
+    const tag = document.getElementById('autosaveTag');
+    const txt = document.getElementById('autosaveText');
+    if(tag && txt && data._ts){
+      tag.classList.add('saved');
+      const d = new Date(data._ts);
+      txt.textContent = `草稿恢復 ${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+    ['mrn','dob','opdate'].forEach(validateField);
+  }catch(e){console.warn('loadDraft failed', e)}
+}
+function bindAutosave(){
+  const trigger = ()=>{ clearTimeout(saveTimer); saveTimer = setTimeout(autosave, 600); };
+  document.querySelectorAll('input').forEach(e=>{
+    e.addEventListener('input', trigger);
+    e.addEventListener('change', trigger);
+  });
+}
+
+function clearForm(){
+  if(!confirm('確定要清除目前填寫內容？此操作只清這份表單草稿；已存的病例不會被刪掉。'))return;
+  document.querySelectorAll('input[type=text],input[type=time]').forEach(e=>e.value='');
+  document.querySelectorAll('input[type=radio],input[type=checkbox]').forEach(e=>e.checked=false);
+  document.querySelectorAll('.field-err').forEach(e=>e.style.display='none');
+  document.querySelectorAll('input.invalid').forEach(e=>e.classList.remove('invalid'));
+  try{localStorage.removeItem(STORAGE_KEY)}catch(e){}
+  document.getElementById('autosaveTag').classList.remove('saved');
+  document.getElementById('autosaveText').textContent='尚未存檔';
+  updateProgress();
+  toast('表單已清空');
+}
+
+// ─── v0.6：病例累積 ────────────────────────────────────────────────────────
+function getCases(){
+  try{ return JSON.parse(localStorage.getItem(CASES_KEY) || '[]'); }
+  catch(e){ console.warn('parse cases failed', e); return []; }
+}
+function setCases(arr){ localStorage.setItem(CASES_KEY, JSON.stringify(arr)); }
+
+function buildCaseFromForm(){
+  const obj = { _ts: new Date().toISOString() };
+  CASE_FIELDS.forEach(f => { obj[f.key] = f.get(); });
+  return obj;
+}
+
+async function saveCase(){
+  // 基本守門：MRN + opdate 至少要有
+  if (v('mrn')==='—' && v('name')==='—') {
+    if (!confirm('病歷號與姓名都空白，仍要存檔？')) return;
+  }
+  const cases = getCases();
+  const c = buildCaseFromForm();
+  cases.push(c);
+  setCases(cases);
+  updateCasesCounter();
+  toast(`已存第 ${cases.length} 筆 — ${c.name!=='—'?c.name:'(無姓名)'} / ${c.opdate!=='—'?c.opdate:'(無日期)'}`,'ok');
+
+  // 若有授權的資料夾 → 直接寫入 cases.csv（每存一次重寫全檔）
+  if (dirHandle) {
+    try {
+      await writeCsvToFolder(cases);
+      toast(`已同步到 「${dirHandle.name}/neuroendo_cases.csv」（共 ${cases.length} 筆）`,'ok');
+    } catch (e) {
+      console.error(e);
+      toast('資料夾寫入失敗：' + (e.message || e),'err');
+    }
+  }
+}
+
+function updateCasesCounter(){
+  const n = getCases().length;
+  document.getElementById('casesCounter').textContent = `已存 ${n} 筆病例`;
+}
+
+// ─── v0.6：CSV 構建 ───────────────────────────────────────────────────────
+function buildCSV(cases){
+  const headers = ['#','Saved'].concat(CASE_FIELDS.map(f=>f.label));
+  const esc = s => {
+    if (s == null) return '';
+    s = String(s);
+    return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const rows = [headers.map(esc).join(',')];
+  cases.forEach((c, i) => {
+    const row = [i+1, c._ts].concat(CASE_FIELDS.map(f => c[f.key] ?? ''));
+    rows.push(row.map(esc).join(','));
+  });
+  // BOM + CRLF for Excel (Mac/Windows) UTF-8 中文相容
+  return '﻿' + rows.join('\r\n');
+}
+
+function exportCSV(){
+  const cases = getCases();
+  if (cases.length === 0) { toast('尚未存任何病例，請先按「存檔此病例」','err'); return; }
+  const csv = buildCSV(cases);
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `neuroendo_cases_${todayStamp()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`已下載 ${cases.length} 筆 CSV`,'ok');
+}
+
+function todayStamp(){
+  const d = new Date();
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+// ─── v0.6：File System Access API — 選資料夾 & 寫入 ────────────────────────
+async function pickFolder(){
+  if (!window.showDirectoryPicker) {
+    toast('此瀏覽器不支援資料夾直寫，請用 Chrome / Edge（Safari 16.4+ 部分支援）','err');
+    return;
+  }
+  try {
+    dirHandle = await window.showDirectoryPicker({ mode:'readwrite' });
+    // 試寫權限
+    const perm = await dirHandle.requestPermission({ mode:'readwrite' });
+    if (perm !== 'granted') {
+      dirHandle = null;
+      toast('未獲得寫入權限','err');
+      return;
+    }
+    updateFolderUI();
+    // 若已有累積病例，立刻同步一次
+    const cases = getCases();
+    if (cases.length > 0) {
+      await writeCsvToFolder(cases);
+      toast(`資料夾已連結，並同步 ${cases.length} 筆病例到 cases.csv`,'ok');
+    } else {
+      toast(`資料夾已連結：${dirHandle.name}（之後存檔會自動寫入）`,'ok');
+    }
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.error(e);
+      toast('選資料夾失敗：' + (e.message || e),'err');
+    }
+  }
+}
+
+async function writeCsvToFolder(cases){
+  if (!dirHandle) throw new Error('未選資料夾');
+  const csv = buildCSV(cases);
+  const fileHandle = await dirHandle.getFileHandle('neuroendo_cases.csv', { create:true });
+  const w = await fileHandle.createWritable();
+  await w.write(csv);
+  await w.close();
+}
+
+function updateFolderUI(){
+  const tag = document.getElementById('folderTag');
+  const txt = document.getElementById('folderText');
+  const banner = document.getElementById('folderBanner');
+  const bannerName = document.getElementById('folderBannerName');
+  if (dirHandle) {
+    tag.classList.add('set');
+    txt.textContent = dirHandle.name;
+    banner.style.display = 'block';
+    bannerName.textContent = dirHandle.name;
+  } else {
+    tag.classList.remove('set');
+    txt.textContent = '未選資料夾';
+    banner.style.display = 'none';
+  }
+}
+
+// ─── v0.6：病例列表 modal ─────────────────────────────────────────────────
+function showCaseList(){
+  const cases = getCases();
+  const wrap = document.getElementById('caseList');
+  document.getElementById('caseListCount').textContent = `${cases.length} 筆`;
+  if (cases.length === 0) {
+    wrap.innerHTML = '<div class="case-empty">尚未存任何病例。<br>填完表單後按下方「💾 存檔此病例」即可累積。</div>';
+  } else {
+    let html = `<div class="case-row head">
+      <div>#</div><div>姓名</div><div class="mrn">MRN</div><div>診斷</div><div>OpDate</div><div></div>
+    </div>`;
+    cases.forEach((c, i) => {
+      html += `<div class="case-row">
+        <div class="num">${i+1}</div>
+        <div>${escapeHtml(c.name || '—')}</div>
+        <div class="mrn">${escapeHtml(c.mrn || '—')}</div>
+        <div title="${escapeHtml(c.dx || '—')}" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHtml(c.dx || '—')}</div>
+        <div class="ts">${escapeHtml(c.opdate || '—')}</div>
+        <div><button class="btn btn-r" onclick="deleteCase(${i})">刪除</button></div>
+      </div>`;
+    });
+    wrap.innerHTML = html;
+  }
+  document.getElementById('caseListModal').classList.add('open');
+}
+
+async function deleteCase(idx){
+  const cases = getCases();
+  if (!cases[idx]) return;
+  if (!confirm(`確定刪除 #${idx+1}（${cases[idx].name || '無姓名'}）？`)) return;
+  cases.splice(idx, 1);
+  setCases(cases);
+  if (dirHandle) {
+    try { await writeCsvToFolder(cases); } catch(e) { console.error(e); }
+  }
+  updateCasesCounter();
+  showCaseList();
+  toast('已刪除');
+}
+
+async function clearAllCases(){
+  const cases = getCases();
+  if (cases.length === 0) { toast('沒有病例可清'); return; }
+  if (!confirm(`確定清空全部 ${cases.length} 筆病例？（資料夾的 cases.csv 也會被覆蓋為空表頭）`)) return;
+  setCases([]);
+  if (dirHandle) {
+    try { await writeCsvToFolder([]); } catch(e) { console.error(e); }
+  }
+  updateCasesCounter();
+  showCaseList();
+  toast('已清空全部病例');
+}
+
+// ─── 啟動 ─────────────────────────────────────────────────────────────────
+loadDraft();
+bindAutosave();
+updateProgress();
+updateCasesCounter();
+updateFolderUI();
+
+// 若 30 秒以上沒動作 → 重新計算 case counter（多分頁同步）
+setInterval(updateCasesCounter, 30000);
+</script>
+</body>
+</html>

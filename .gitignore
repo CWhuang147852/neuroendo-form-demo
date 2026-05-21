@@ -1,0 +1,7 @@
+# Demo repo — only ship index.html
+neuroendo_form_v*.html
+CLAUDE.md
+PROJECT_STATE.md
+.claude/
+新資料夾/
+.DS_Store
